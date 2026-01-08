@@ -1,9 +1,41 @@
-#!/bin/bash
-# Build OB-Xd module for Move Anything
+#!/usr/bin/env bash
+# Build OB-Xd module for Move Anything (ARM64)
+#
+# Automatically uses Docker for cross-compilation if needed.
+# Set CROSS_PREFIX to skip Docker (e.g., for native ARM builds).
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+IMAGE_NAME="move-anything-builder"
+
+# Check if we need Docker
+if [ -z "$CROSS_PREFIX" ] && [ ! -f "/.dockerenv" ]; then
+    echo "=== OB-Xd Module Build (via Docker) ==="
+    echo ""
+
+    # Build Docker image if needed
+    if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
+        echo "Building Docker image (first time only)..."
+        docker build -t "$IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile" "$REPO_ROOT"
+        echo ""
+    fi
+
+    # Run build inside container
+    echo "Running build..."
+    docker run --rm \
+        -v "$REPO_ROOT:/build" \
+        -u "$(id -u):$(id -g)" \
+        -w /build \
+        "$IMAGE_NAME" \
+        ./scripts/build.sh
+
+    echo ""
+    echo "=== Done ==="
+    exit 0
+fi
+
+# === Actual build (runs in Docker or with cross-compiler) ===
 CROSS_PREFIX="${CROSS_PREFIX:-aarch64-linux-gnu-}"
 
 cd "$REPO_ROOT"
@@ -29,9 +61,10 @@ cp src/module.json dist/obxd/
 cp src/ui.js dist/obxd/
 cp build/dsp.so dist/obxd/
 
-# Copy patches if they exist
-if [ -d "patches" ]; then
-    cp -r patches dist/obxd/
+# Copy presets
+if [ -d "src/presets" ]; then
+    mkdir -p dist/obxd/presets
+    cp src/presets/*.fxb dist/obxd/presets/
 fi
 
 echo ""

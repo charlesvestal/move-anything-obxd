@@ -2,6 +2,9 @@
 build/
 dist/
 
+# OB-Xd release assets (presets extracted from release)
+OB-Xd 2/
+
 # macOS
 .DS_Store
 *.dSYM/

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <dirent.h>
 
 /* Include plugin API */
 extern "C" {
@@ -77,6 +78,189 @@ static const char* g_param_names[3][8] = {
     /* Bank 2: Modulation */
     {"lfo_rate", "lfo_wave", "lfo_cutoff", "lfo_pitch", "lfo_pw", "vibrato", "unison", "portamento"}
 };
+
+/* === Preset storage === */
+#define MAX_PRESETS 128
+#define MAX_PARAMS 100
+
+struct Preset {
+    char name[32];
+    float params[MAX_PARAMS];
+    int param_count;
+};
+
+static Preset g_presets[MAX_PRESETS];
+static char g_module_dir[256] = "";
+
+/* Forward declaration */
+static void plugin_log(const char *msg);
+
+/* Parse float from attribute value */
+static float parse_attr_float(const char *start) {
+    return atof(start);
+}
+
+/* Extract attribute value between quotes */
+static const char* find_attr(const char *xml, const char *attr_name, char *buf, int buf_len) {
+    char search[64];
+    snprintf(search, sizeof(search), "%s=\"", attr_name);
+    const char *pos = strstr(xml, search);
+    if (!pos) return NULL;
+
+    pos += strlen(search);
+    const char *end = strchr(pos, '"');
+    if (!end) return NULL;
+
+    int len = end - pos;
+    if (len >= buf_len) len = buf_len - 1;
+    strncpy(buf, pos, len);
+    buf[len] = '\0';
+    return end + 1;
+}
+
+/* Apply a loaded preset to the synth engine */
+static void apply_preset(int preset_idx) {
+    if (preset_idx < 0 || preset_idx >= g_preset_count) return;
+
+    Preset *p = &g_presets[preset_idx];
+    snprintf(g_preset_name, sizeof(g_preset_name), "%s", p->name);
+
+    /* Apply all parameters from the preset */
+    /* Val_X maps directly to ObxdParameters enum indices */
+    if (p->param_count > 2) g_synth.processVolume(p->params[2]);           /* VOLUME = 2 */
+    if (p->param_count > 4) g_synth.processTune(p->params[4]);             /* TUNE = 4 */
+    if (p->param_count > 5) g_synth.processOctave(p->params[5]);           /* OCTAVE = 5 */
+    if (p->param_count > 13) g_synth.processPortamento(p->params[13]);     /* PORTAMENTO = 13 */
+    if (p->param_count > 14) g_synth.processUnison(p->params[14]);         /* UNISON = 14 */
+    if (p->param_count > 15) g_synth.processDetune(p->params[15]);         /* UDET = 15 */
+    if (p->param_count > 16) g_synth.processOsc2Det(p->params[16]);        /* OSC2_DET = 16 */
+    if (p->param_count > 17) g_synth.processLfoFrequency(p->params[17]);   /* LFOFREQ = 17 */
+    if (p->param_count > 18) g_synth.processLfoSine(p->params[18]);        /* LFOSINWAVE = 18 */
+    if (p->param_count > 19) g_synth.processLfoSquare(p->params[19]);      /* LFOSQUAREWAVE = 19 */
+    if (p->param_count > 20) g_synth.processLfoSH(p->params[20]);          /* LFOSHWAVE = 20 */
+    if (p->param_count > 21) g_synth.processLfoAmt1(p->params[21]);        /* LFO1AMT = 21 */
+    if (p->param_count > 22) g_synth.processLfoAmt2(p->params[22]);        /* LFO2AMT = 22 */
+    if (p->param_count > 23) g_synth.processLfoOsc1(p->params[23]);        /* LFOOSC1 = 23 */
+    if (p->param_count > 24) g_synth.processLfoOsc2(p->params[24]);        /* LFOOSC2 = 24 */
+    if (p->param_count > 25) g_synth.processLfoFilter(p->params[25]);      /* LFOFILTER = 25 */
+    if (p->param_count > 26) g_synth.processLfoPw1(p->params[26]);         /* LFOPW1 = 26 */
+    if (p->param_count > 27) g_synth.processLfoPw2(p->params[27]);         /* LFOPW2 = 27 */
+    if (p->param_count > 28) g_synth.processOsc2HardSync(p->params[28]);   /* OSC2HS = 28 */
+    if (p->param_count > 29) g_synth.processOsc2Xmod(p->params[29]);       /* XMOD = 29 */
+    if (p->param_count > 30) g_synth.processOsc1Pitch(p->params[30]);      /* OSC1P = 30 */
+    if (p->param_count > 31) g_synth.processOsc2Pitch(p->params[31]);      /* OSC2P = 31 */
+    if (p->param_count > 32) g_synth.processPitchQuantization(p->params[32]); /* OSCQuantize = 32 */
+    if (p->param_count > 33) g_synth.processOsc1Saw(p->params[33]);        /* OSC1Saw = 33 */
+    if (p->param_count > 34) g_synth.processOsc1Pulse(p->params[34]);      /* OSC1Pul = 34 */
+    if (p->param_count > 35) g_synth.processOsc2Saw(p->params[35]);        /* OSC2Saw = 35 */
+    if (p->param_count > 36) g_synth.processOsc2Pulse(p->params[36]);      /* OSC2Pul = 36 */
+    if (p->param_count > 37) g_synth.processPulseWidth(p->params[37]);     /* PW = 37 */
+    if (p->param_count > 38) g_synth.processBrightness(p->params[38]);     /* BRIGHTNESS = 38 */
+    if (p->param_count > 39) g_synth.processEnvelopeToPitch(p->params[39]); /* ENVPITCH = 39 */
+    if (p->param_count > 40) g_synth.processOsc1Mix(p->params[40]);        /* OSC1MIX = 40 */
+    if (p->param_count > 41) g_synth.processOsc2Mix(p->params[41]);        /* OSC2MIX = 41 */
+    if (p->param_count > 42) g_synth.processNoiseMix(p->params[42]);       /* NOISEMIX = 42 */
+    if (p->param_count > 43) g_synth.processFilterKeyFollow(p->params[43]); /* FLT_KF = 43 */
+    if (p->param_count > 44) g_synth.processCutoff(p->params[44]);         /* CUTOFF = 44 */
+    if (p->param_count > 45) g_synth.processResonance(p->params[45]);      /* RESONANCE = 45 */
+    if (p->param_count > 46) g_synth.processMultimode(p->params[46]);      /* MULTIMODE = 46 */
+    if (p->param_count > 48) g_synth.processBandpassSw(p->params[48]);     /* BANDPASS = 48 */
+    if (p->param_count > 49) g_synth.processFourPole(p->params[49]);       /* FOURPOLE = 49 */
+    if (p->param_count > 50) g_synth.processFilterEnvelopeAmt(p->params[50]); /* ENVELOPE_AMT = 50 */
+    if (p->param_count > 51) g_synth.processLoudnessEnvelopeAttack(p->params[51]);  /* LATK = 51 */
+    if (p->param_count > 52) g_synth.processLoudnessEnvelopeDecay(p->params[52]);   /* LDEC = 52 */
+    if (p->param_count > 53) g_synth.processLoudnessEnvelopeSustain(p->params[53]); /* LSUS = 53 */
+    if (p->param_count > 54) g_synth.processLoudnessEnvelopeRelease(p->params[54]); /* LREL = 54 */
+    if (p->param_count > 55) g_synth.processFilterEnvelopeAttack(p->params[55]);    /* FATK = 55 */
+    if (p->param_count > 56) g_synth.processFilterEnvelopeDecay(p->params[56]);     /* FDEC = 56 */
+    if (p->param_count > 57) g_synth.processFilterEnvelopeSustain(p->params[57]);   /* FSUS = 57 */
+    if (p->param_count > 58) g_synth.processFilterEnvelopeRelease(p->params[58]);   /* FREL = 58 */
+    if (p->param_count > 59) g_synth.processEnvelopeDetune(p->params[59]);          /* ENVDER = 59 */
+    if (p->param_count > 60) g_synth.processFilterDetune(p->params[60]);            /* FILTERDER = 60 */
+    if (p->param_count > 61) g_synth.processPortamentoDetune(p->params[61]);        /* PORTADER = 61 */
+
+    /* Update local param cache for display */
+    if (p->param_count > 44) g_params[0] = p->params[44];  /* cutoff */
+    if (p->param_count > 45) g_params[1] = p->params[45];  /* resonance */
+    if (p->param_count > 50) g_params[2] = p->params[50];  /* filter_env */
+    if (p->param_count > 43) g_params[3] = p->params[43];  /* key_track */
+    if (p->param_count > 51) g_params[4] = p->params[51];  /* attack */
+    if (p->param_count > 52) g_params[5] = p->params[52];  /* decay */
+    if (p->param_count > 53) g_params[6] = p->params[53];  /* sustain */
+    if (p->param_count > 54) g_params[7] = p->params[54];  /* release */
+}
+
+/* Parse FXB bank file and load presets */
+static int load_bank(const char *bank_path) {
+    FILE *f = fopen(bank_path, "rb");
+    if (!f) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Failed to open bank: %s", bank_path);
+        plugin_log(msg);
+        return -1;
+    }
+
+    /* Get file size */
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    /* Read entire file */
+    char *data = (char*)malloc(size + 1);
+    if (!data) {
+        fclose(f);
+        return -1;
+    }
+    fread(data, 1, size, f);
+    data[size] = '\0';
+    fclose(f);
+
+    /* Find XML start */
+    char *xml = strstr(data, "<?xml");
+    if (!xml) {
+        free(data);
+        plugin_log("No XML found in bank file");
+        return -1;
+    }
+
+    /* Parse each <program> element */
+    g_preset_count = 0;
+    char *program = xml;
+    char buf[256];
+
+    while ((program = strstr(program, "<program ")) != NULL && g_preset_count < MAX_PRESETS) {
+        Preset *p = &g_presets[g_preset_count];
+        memset(p, 0, sizeof(Preset));
+
+        /* Get program name */
+        if (find_attr(program, "programName", buf, sizeof(buf))) {
+            strncpy(p->name, buf, sizeof(p->name) - 1);
+        } else {
+            snprintf(p->name, sizeof(p->name), "Preset %d", g_preset_count);
+        }
+
+        /* Parse Val_X parameters */
+        for (int i = 0; i < MAX_PARAMS; i++) {
+            char attr_name[16];
+            snprintf(attr_name, sizeof(attr_name), "Val_%d", i);
+            if (find_attr(program, attr_name, buf, sizeof(buf))) {
+                p->params[i] = parse_attr_float(buf);
+                p->param_count = i + 1;
+            }
+        }
+
+        g_preset_count++;
+        program++; /* Move past this <program to find next */
+    }
+
+    free(data);
+
+    char msg[128];
+    snprintf(msg, sizeof(msg), "Loaded %d presets from bank", g_preset_count);
+    plugin_log(msg);
+
+    return g_preset_count;
+}
 
 /* Helper: log via host */
 static void plugin_log(const char *msg) {
@@ -207,6 +391,9 @@ static int plugin_on_load(const char *module_dir, const char *json_defaults) {
     snprintf(msg, sizeof(msg), "OB-Xd plugin loading from: %s", module_dir);
     plugin_log(msg);
 
+    /* Store module directory */
+    strncpy(g_module_dir, module_dir, sizeof(g_module_dir) - 1);
+
     /* Initialize synth engine */
     g_synth.setSampleRate((float)MOVE_SAMPLE_RATE);
 
@@ -215,6 +402,15 @@ static int plugin_on_load(const char *module_dir, const char *json_defaults) {
 
     /* Initialize with default patch */
     init_default_patch();
+
+    /* Try to load preset bank */
+    char bank_path[512];
+    snprintf(bank_path, sizeof(bank_path), "%s/presets/factory.fxb", module_dir);
+    if (load_bank(bank_path) > 0) {
+        /* Load first preset */
+        g_current_preset = 0;
+        apply_preset(0);
+    }
 
     plugin_log("OB-Xd plugin loaded");
     return 0;
@@ -302,8 +498,11 @@ static void plugin_set_param(const char *key, const char *val) {
         g_tempo_bpm = fval;
         g_synth.setPlayHead(g_tempo_bpm, 0.0f);
     } else if (strcmp(key, "preset") == 0) {
-        g_current_preset = (int)fval;
-        /* TODO: Load preset from .fxb file */
+        int new_preset = (int)fval;
+        if (new_preset >= 0 && new_preset < g_preset_count) {
+            g_current_preset = new_preset;
+            apply_preset(g_current_preset);
+        }
     } else if (strcmp(key, "all_notes_off") == 0) {
         g_synth.allNotesOff();
     } else if (strcmp(key, "panic") == 0) {
