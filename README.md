@@ -11,17 +11,9 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 - 4-pole resonant filter with envelope modulation
 - LFO with sine, square, and S&H waveforms
 - Full ADSR envelopes for amplitude and filter
+- Works standalone or as a sound generator in Signal Chain patches
 
 ## Install
-
-### Pre-built (recommended)
-
-```bash
-curl -L https://github.com/charlesvestal/move-anything-obxd/releases/latest/download/obxd-module.tar.gz | \
-  ssh ableton@move.local 'tar -xz -C /data/UserData/move-anything/modules/'
-```
-
-### Build from source
 
 Requires ARM64 cross-compiler or Docker.
 
@@ -31,6 +23,8 @@ cd move-anything-obxd
 ./scripts/build.sh
 ./scripts/install.sh
 ```
+
+This also installs chain presets for using OB-Xd with arpeggiators and effects.
 
 ## Controls
 
