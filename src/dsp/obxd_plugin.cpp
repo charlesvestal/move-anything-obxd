@@ -95,6 +95,15 @@ static char g_module_dir[256] = "";
 /* Forward declaration */
 static void plugin_log(const char *msg);
 
+/* Debug log to file */
+static void debug_log(const char *msg) {
+    FILE *f = fopen("/tmp/obxd-debug.log", "a");
+    if (f) {
+        fprintf(f, "%s\n", msg);
+        fclose(f);
+    }
+}
+
 /* Parse float from attribute value */
 static float parse_attr_float(const char *start) {
     return atof(start);
@@ -192,13 +201,19 @@ static void apply_preset(int preset_idx) {
 
 /* Parse FXB bank file and load presets */
 static int load_bank(const char *bank_path) {
+    char dbg[512];
+    snprintf(dbg, sizeof(dbg), "load_bank: trying to open %s", bank_path);
+    debug_log(dbg);
+
     FILE *f = fopen(bank_path, "rb");
     if (!f) {
         char msg[256];
         snprintf(msg, sizeof(msg), "Failed to open bank: %s", bank_path);
         plugin_log(msg);
+        debug_log(msg);
         return -1;
     }
+    debug_log("load_bank: file opened successfully");
 
     /* Get file size */
     fseek(f, 0, SEEK_END);
@@ -258,6 +273,7 @@ static int load_bank(const char *bank_path) {
     char msg[128];
     snprintf(msg, sizeof(msg), "Loaded %d presets from bank", g_preset_count);
     plugin_log(msg);
+    debug_log(msg);
 
     return g_preset_count;
 }

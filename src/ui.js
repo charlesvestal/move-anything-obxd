@@ -192,11 +192,11 @@ globalThis.onMidiMessageInternal = function(data) {
             return;
         }
 
-        /* Jog wheel - preset browsing */
+        /* Jog wheel - preset browsing (relative encoder: 1-63=CW, 64-127=CCW) */
         if (d1 === MoveMainKnob) {
-            if (d2 === 1) {
+            if (d2 >= 1 && d2 <= 63) {
                 changePreset(1);
-            } else if (d2 === 127) {
+            } else if (d2 >= 64 && d2 <= 127) {
                 changePreset(-1);
             }
             return;
