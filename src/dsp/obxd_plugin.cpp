@@ -52,7 +52,7 @@ typedef struct plugin_api_v1 {
 #include "Engine/SynthEngine.h"
 
 /* Constants */
-#define MAX_VOICES 4  /* Reduced for ARM CPU */
+#define MAX_VOICES 6  /* Balanced for ARM CPU */
 
 /* Plugin state */
 static const host_api_v1_t *g_host = NULL;
