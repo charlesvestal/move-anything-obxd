@@ -220,30 +220,52 @@ static int load_bank(const char *bank_path) {
     long size = ftell(f);
     fseek(f, 0, SEEK_SET);
 
+    char dbg2[128];
+    snprintf(dbg2, sizeof(dbg2), "load_bank: file size = %ld", size);
+    debug_log(dbg2);
+
     /* Read entire file */
     char *data = (char*)malloc(size + 1);
     if (!data) {
         fclose(f);
+        debug_log("load_bank: malloc failed");
         return -1;
     }
-    fread(data, 1, size, f);
+    size_t read_bytes = fread(data, 1, size, f);
     data[size] = '\0';
     fclose(f);
 
-    /* Find XML start */
-    char *xml = strstr(data, "<?xml");
+    snprintf(dbg2, sizeof(dbg2), "load_bank: read %zu bytes", read_bytes);
+    debug_log(dbg2);
+
+    /* Find XML start - scan manually because binary header may contain NULLs */
+    char *xml = NULL;
+    for (long i = 0; i < size - 5; i++) {
+        if (data[i] == '<' && data[i+1] == '?' && data[i+2] == 'x' &&
+            data[i+3] == 'm' && data[i+4] == 'l') {
+            xml = &data[i];
+            break;
+        }
+    }
     if (!xml) {
         free(data);
+        debug_log("load_bank: No XML found in bank file");
         plugin_log("No XML found in bank file");
         return -1;
     }
+    debug_log("load_bank: found XML start");
 
     /* Parse each <program> element */
     g_preset_count = 0;
     char *program = xml;
     char buf[256];
 
+    debug_log("load_bank: starting program parse loop");
+
     while ((program = strstr(program, "<program ")) != NULL && g_preset_count < MAX_PRESETS) {
+        if (g_preset_count == 0) {
+            debug_log("load_bank: found first <program>");
+        }
         Preset *p = &g_presets[g_preset_count];
         memset(p, 0, sizeof(Preset));
 
