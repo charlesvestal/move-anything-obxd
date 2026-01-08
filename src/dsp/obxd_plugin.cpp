@@ -375,8 +375,8 @@ static void apply_param(int bank, int idx, float value) {
     }
 }
 
-/* Output gain */
-static float g_output_gain = 1.0f;
+/* Output gain - reduced to prevent clipping with hot presets */
+static float g_output_gain = 0.5f;
 
 /* Initialize default patch */
 static void init_default_patch() {
