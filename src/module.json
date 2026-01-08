@@ -8,6 +8,13 @@
     "ui": "ui.js",
     "dsp": "dsp.so",
     "api_version": 1,
-    "audio_out": true,
-    "midi_in": true
+    "capabilities": {
+        "audio_out": true,
+        "audio_in": false,
+        "midi_in": true,
+        "midi_out": false,
+        "aftertouch": true,
+        "chainable": true,
+        "component_type": "sound_generator"
+    }
 }
