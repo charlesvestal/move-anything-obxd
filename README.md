@@ -15,7 +15,16 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 
 ## Install
 
-Requires ARM64 cross-compiler or Docker.
+### Quick Install (pre-built)
+
+```bash
+curl -L https://raw.githubusercontent.com/charlesvestal/move-anything-obxd/main/obxd-module.tar.gz | \
+  ssh ableton@move.local 'tar -xz -C /data/UserData/move-anything/modules/'
+```
+
+### Build from Source
+
+Requires Docker (recommended) or ARM64 cross-compiler.
 
 ```bash
 git clone https://github.com/charlesvestal/move-anything-obxd
