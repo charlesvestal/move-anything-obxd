@@ -1,0 +1,203 @@
+/*
+ * OB-Xd UI for Move Anything
+ *
+ * GPL-3.0 License
+ */
+
+import {
+    MidiCC, MidiNoteOn, MidiNoteOff,
+    MoveLeft, MoveRight, MoveUp, MoveDown,
+    MoveMainKnob, MoveShift
+} from '../../shared/constants.mjs';
+
+/* State */
+let paramBank = 0;  /* 0=Filter, 1=Osc, 2=Mod */
+let octaveTranspose = 0;
+let currentPreset = 0;
+let shiftHeld = false;
+
+/* Bank definitions */
+const bankNames = ["Filter", "Oscillators", "Modulation"];
+const bankParams = [
+    /* Bank 0: Filter */
+    ["cutoff", "resonance", "filter_env", "key_track", "attack", "decay", "sustain", "release"],
+    /* Bank 1: Oscillators */
+    ["osc1_wave", "osc1_pw", "osc2_wave", "osc2_pw", "osc2_detune", "osc_mix", "osc2_pitch", "noise"],
+    /* Bank 2: Modulation */
+    ["lfo_rate", "lfo_wave", "lfo_cutoff", "lfo_pitch", "lfo_pw", "vibrato", "unison", "portamento"]
+];
+
+/* Short display names (max 3 chars) */
+const paramDisplayNames = [
+    ["Cut", "Res", "Env", "Key", "Atk", "Dec", "Sus", "Rel"],
+    ["Wv1", "PW1", "Wv2", "PW2", "Det", "Mix", "Pit", "Noi"],
+    ["Rat", "Wve", "Flt", "Pit", "PW", "Vib", "Uni", "Por"]
+];
+
+/* Current parameter values (0-100 for display) */
+let paramValues = [
+    [70, 20, 30, 0, 1, 30, 70, 20],
+    [50, 50, 50, 50, 10, 50, 0, 0],
+    [30, 0, 0, 0, 0, 0, 0, 0]
+];
+
+/* Knob CC mappings (knobs 1-8 = CC 71-78) */
+const KNOB_CC_START = 71;
+
+/* Helper: format value for display */
+function formatValue(val) {
+    let s = Math.round(val).toString();
+    while (s.length < 3) s = ' ' + s;
+    return s;
+}
+
+/* Update display */
+function updateDisplay() {
+    clear_screen();
+
+    /* Line 1: Module name, bank, preset number */
+    let presetStr = currentPreset.toString().padStart(2, '0');
+    print(2, 2, "OB-Xd", 1);
+    print(40, 2, "[" + bankNames[paramBank] + "]", 1);
+    print(115, 2, presetStr, 1);
+
+    /* Line 2: Preset name */
+    let presetName = host_module_get_param("preset_name") || "Init";
+    print(2, 12, presetName.substring(0, 20), 1);
+
+    /* Line 3: Params 1-4 names */
+    let names = paramDisplayNames[paramBank];
+    for (let i = 0; i < 4; i++) {
+        print(2 + i * 32, 24, names[i], 1);
+    }
+
+    /* Line 4: Params 1-4 values */
+    let vals = paramValues[paramBank];
+    for (let i = 0; i < 4; i++) {
+        print(2 + i * 32, 34, formatValue(vals[i]), 1);
+    }
+
+    /* Line 5: Params 5-8 names */
+    for (let i = 4; i < 8; i++) {
+        print(2 + (i - 4) * 32, 44, names[i], 1);
+    }
+
+    /* Line 6: Params 5-8 values */
+    for (let i = 4; i < 8; i++) {
+        print(2 + (i - 4) * 32, 54, formatValue(vals[i]), 1);
+    }
+}
+
+/* Handle knob change */
+function handleKnob(knobIndex, value) {
+    /* knobIndex: 0-7, value: 0-127 */
+    let paramName = bankParams[paramBank][knobIndex];
+    let normalized = value / 127.0;
+
+    /* Store display value */
+    paramValues[paramBank][knobIndex] = Math.round(normalized * 100);
+
+    /* Send to DSP */
+    host_module_set_param(paramName, normalized.toFixed(3));
+
+    updateDisplay();
+}
+
+/* Switch bank */
+function switchBank(delta) {
+    paramBank += delta;
+    if (paramBank < 0) paramBank = 2;
+    if (paramBank > 2) paramBank = 0;
+
+    host_module_set_param("param_bank", paramBank.toString());
+    updateDisplay();
+}
+
+/* Change octave */
+function changeOctave(delta) {
+    octaveTranspose += delta;
+    if (octaveTranspose < -4) octaveTranspose = -4;
+    if (octaveTranspose > 4) octaveTranspose = 4;
+
+    host_module_set_param("octave_transpose", octaveTranspose.toString());
+    updateDisplay();
+}
+
+/* Change preset */
+function changePreset(delta) {
+    let presetCount = parseInt(host_module_get_param("preset_count") || "1");
+    currentPreset += delta;
+    if (currentPreset < 0) currentPreset = presetCount - 1;
+    if (currentPreset >= presetCount) currentPreset = 0;
+
+    host_module_set_param("preset", currentPreset.toString());
+    updateDisplay();
+}
+
+/* Init */
+globalThis.init = function() {
+    console.log("OB-Xd UI initializing");
+    updateDisplay();
+};
+
+/* Tick */
+globalThis.tick = function() {
+    /* Nothing to update per-frame currently */
+};
+
+/* Handle Move hardware MIDI */
+globalThis.onMidiMessageInternal = function(data) {
+    let status = data[0] & 0xF0;
+    let d1 = data[1];
+    let d2 = data[2];
+
+    if (status === 0xB0) {  /* CC */
+        /* Shift button */
+        if (d1 === MoveShift) {
+            shiftHeld = (d2 > 0);
+            return;
+        }
+
+        /* Left/Right arrows - switch bank */
+        if (d1 === MoveLeft && d2 > 0) {
+            switchBank(-1);
+            return;
+        }
+        if (d1 === MoveRight && d2 > 0) {
+            switchBank(1);
+            return;
+        }
+
+        /* Up/Down arrows - octave */
+        if (d1 === MoveUp && d2 > 0) {
+            changeOctave(1);
+            return;
+        }
+        if (d1 === MoveDown && d2 > 0) {
+            changeOctave(-1);
+            return;
+        }
+
+        /* Jog wheel - preset browsing */
+        if (d1 === MoveMainKnob) {
+            if (d2 === 1) {
+                changePreset(1);
+            } else if (d2 === 127) {
+                changePreset(-1);
+            }
+            return;
+        }
+
+        /* Knobs 1-8 (CC 71-78) */
+        if (d1 >= KNOB_CC_START && d1 < KNOB_CC_START + 8) {
+            let knobIndex = d1 - KNOB_CC_START;
+            handleKnob(knobIndex, d2);
+            return;
+        }
+    }
+};
+
+/* Handle external MIDI - pass through to DSP */
+globalThis.onMidiMessageExternal = function(data) {
+    /* External MIDI is handled directly by DSP */
+};
