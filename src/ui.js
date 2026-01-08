@@ -55,15 +55,14 @@ function formatValue(val) {
 function updateDisplay() {
     clear_screen();
 
-    /* Line 1: Module name, bank, preset number */
-    let presetStr = currentPreset.toString().padStart(2, '0');
+    /* Line 1: Module name and bank */
     print(2, 2, "OB-Xd", 1);
-    print(40, 2, "[" + bankNames[paramBank] + "]", 1);
-    print(115, 2, presetStr, 1);
+    print(50, 2, "[" + bankNames[paramBank] + "]", 1);
 
-    /* Line 2: Preset name */
+    /* Line 2: Preset number and name */
+    let presetStr = currentPreset.toString().padStart(3, '0');
     let presetName = host_module_get_param("preset_name") || "Init";
-    print(2, 12, presetName.substring(0, 20), 1);
+    print(2, 12, presetStr + " " + presetName.substring(0, 16), 1);
 
     /* Line 3: Params 1-4 names */
     let names = paramDisplayNames[paramBank];
