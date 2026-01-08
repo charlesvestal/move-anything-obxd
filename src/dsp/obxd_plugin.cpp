@@ -529,6 +529,8 @@ static void plugin_set_param(const char *key, const char *val) {
         if (g_param_bank < 0) g_param_bank = 0;
         if (g_param_bank > 2) g_param_bank = 2;
     } else if (strcmp(key, "octave_transpose") == 0) {
+        /* Send all notes off before changing octave to prevent stuck notes */
+        g_synth.allNotesOff();
         g_octave_transpose = (int)fval;
         if (g_octave_transpose < -4) g_octave_transpose = -4;
         if (g_octave_transpose > 4) g_octave_transpose = 4;
@@ -538,6 +540,8 @@ static void plugin_set_param(const char *key, const char *val) {
     } else if (strcmp(key, "preset") == 0) {
         int new_preset = (int)fval;
         if (new_preset >= 0 && new_preset < g_preset_count) {
+            /* Send all notes off before changing preset to prevent artifacts */
+            g_synth.allNotesOff();
             g_current_preset = new_preset;
             apply_preset(g_current_preset);
         }
