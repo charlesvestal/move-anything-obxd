@@ -6,7 +6,7 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 
 ## Features
 
-- 4-voice polyphonic (optimized for Move's ARM CPU)
+- 6-voice polyphonic (balanced for Move's ARM CPU)
 - Saw and pulse oscillators with BLEP anti-aliasing
 - 4-pole resonant filter with envelope modulation
 - LFO with sine, square, and S&H waveforms

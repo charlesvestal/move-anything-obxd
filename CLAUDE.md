@@ -51,7 +51,7 @@ UI organizes parameters into three banks controlled by Left/Right buttons:
 
 ### Voice Management
 
-4-voice polyphonic (optimized for Move's ARM CPU). Voice allocation with note stealing.
+6-voice polyphonic (balanced for Move's ARM CPU). Voice allocation with note stealing.
 
 ## Signal Chain Integration
 
