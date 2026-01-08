@@ -153,10 +153,13 @@ static void apply_param(int bank, int idx, float value) {
     }
 }
 
+/* Output gain (boost the quiet OB-Xd output) */
+static float g_output_gain = 4.0f;
+
 /* Initialize default patch */
 static void init_default_patch() {
     /* Set up a basic saw + filter patch */
-    g_synth.processVolume(0.7f);
+    g_synth.processVolume(1.0f);  /* Max internal volume */
     g_synth.setVoiceCount(MAX_VOICES / 8.0f);  /* Normalized 0-1 for voice count */
 
     /* Oscillators */
@@ -351,6 +354,10 @@ static void plugin_render_block(int16_t *out_interleaved_lr, int frames) {
 
         /* Process one sample */
         g_synth.processSample(&left, &right);
+
+        /* Apply output gain boost */
+        left *= g_output_gain;
+        right *= g_output_gain;
 
         /* Convert float to int16 with clipping */
         int32_t l = (int32_t)(left * 32767.0f);

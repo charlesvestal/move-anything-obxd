@@ -88,16 +88,30 @@ function updateDisplay() {
     }
 }
 
-/* Handle knob change */
+/* Handle knob change (relative encoder) */
 function handleKnob(knobIndex, value) {
-    /* knobIndex: 0-7, value: 0-127 */
+    /* knobIndex: 0-7, value: 1 = CW, 127 = CCW */
+    let delta = 0;
+    if (value === 1) {
+        delta = 2;  /* Clockwise - increase */
+    } else if (value === 127) {
+        delta = -2; /* Counter-clockwise - decrease */
+    } else if (value < 64) {
+        delta = value;  /* Fast CW */
+    } else {
+        delta = value - 128;  /* Fast CCW */
+    }
+
+    /* Update stored value (0-100 range) */
+    let currentVal = paramValues[paramBank][knobIndex];
+    currentVal += delta;
+    if (currentVal < 0) currentVal = 0;
+    if (currentVal > 100) currentVal = 100;
+    paramValues[paramBank][knobIndex] = currentVal;
+
+    /* Send normalized to DSP */
     let paramName = bankParams[paramBank][knobIndex];
-    let normalized = value / 127.0;
-
-    /* Store display value */
-    paramValues[paramBank][knobIndex] = Math.round(normalized * 100);
-
-    /* Send to DSP */
+    let normalized = currentVal / 100.0;
     host_module_set_param(paramName, normalized.toFixed(3));
 
     updateDisplay();
