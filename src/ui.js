@@ -34,12 +34,12 @@ const paramDisplayNames = [
     ["Rat", "Wve", "Flt", "Pit", "PW", "Vib", "Uni", "Por"]
 ];
 
-/* Current parameter values (0-100 for display) */
-let paramValues = [
-    [70, 20, 30, 0, 1, 30, 70, 20],
-    [50, 50, 50, 50, 10, 50, 0, 0],
-    [30, 0, 0, 0, 0, 0, 0, 0]
-];
+/* Get parameter value from DSP (returns 0-100) */
+function getParamValue(bank, idx) {
+    let paramName = bankParams[bank][idx];
+    let val = parseFloat(host_module_get_param(paramName) || "0");
+    return Math.round(val * 100);
+}
 
 /* Knob CC mappings (knobs 1-8 = CC 71-78) */
 const KNOB_CC_START = 71;
@@ -71,9 +71,8 @@ function updateDisplay() {
     }
 
     /* Line 4: Params 1-4 values */
-    let vals = paramValues[paramBank];
     for (let i = 0; i < 4; i++) {
-        print(2 + i * 32, 34, formatValue(vals[i]), 1);
+        print(2 + i * 32, 34, formatValue(getParamValue(paramBank, i)), 1);
     }
 
     /* Line 5: Params 5-8 names */
@@ -83,7 +82,7 @@ function updateDisplay() {
 
     /* Line 6: Params 5-8 values */
     for (let i = 4; i < 8; i++) {
-        print(2 + (i - 4) * 32, 54, formatValue(vals[i]), 1);
+        print(2 + (i - 4) * 32, 54, formatValue(getParamValue(paramBank, i)), 1);
     }
 }
 
@@ -101,12 +100,11 @@ function handleKnob(knobIndex, value) {
         delta = value - 128;  /* Fast CCW */
     }
 
-    /* Update stored value (0-100 range) */
-    let currentVal = paramValues[paramBank][knobIndex];
+    /* Get current value from DSP and apply delta */
+    let currentVal = getParamValue(paramBank, knobIndex);
     currentVal += delta;
     if (currentVal < 0) currentVal = 0;
     if (currentVal > 100) currentVal = 100;
-    paramValues[paramBank][knobIndex] = currentVal;
 
     /* Send normalized to DSP */
     let paramName = bankParams[paramBank][knobIndex];
