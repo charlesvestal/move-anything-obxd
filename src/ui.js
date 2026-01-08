@@ -156,7 +156,7 @@ globalThis.init = function() {
 
 /* Tick */
 globalThis.tick = function() {
-    /* Nothing to update per-frame currently */
+    updateDisplay();
 };
 
 /* Handle Move hardware MIDI */
