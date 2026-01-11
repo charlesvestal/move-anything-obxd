@@ -6,13 +6,6 @@ Instructions for Claude Code when working with this repository.
 
 OB-Xd module for Move Anything - an Oberheim OB-X synthesizer emulator based on the OB-Xd project.
 
-## Build Commands
-
-```bash
-./scripts/build.sh      # Build with Docker (recommended)
-./scripts/install.sh    # Deploy to Move
-```
-
 ## Architecture
 
 ```
