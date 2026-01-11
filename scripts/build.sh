@@ -55,16 +55,19 @@ ${CROSS_PREFIX}g++ -g -O3 -shared -fPIC -std=c++14 \
     -Isrc/dsp \
     -lm
 
-# Copy files to dist
+# Copy files to dist (use cat to avoid ExtFS deallocation issues with Docker)
 echo "Packaging..."
-cp src/module.json dist/obxd/
-cp src/ui.js dist/obxd/
-cp build/dsp.so dist/obxd/
+cat src/module.json > dist/obxd/module.json
+cat src/ui.js > dist/obxd/ui.js
+cat build/dsp.so > dist/obxd/dsp.so
+chmod +x dist/obxd/dsp.so
 
 # Copy presets
 if [ -d "src/presets" ]; then
     mkdir -p dist/obxd/presets
-    cp src/presets/*.fxb dist/obxd/presets/
+    for f in src/presets/*.fxb; do
+        cat "$f" > "dist/obxd/presets/$(basename "$f")"
+    done
 fi
 
 echo ""
