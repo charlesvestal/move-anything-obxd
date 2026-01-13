@@ -1,6 +1,7 @@
 # Build outputs
 build/
 dist/
+/obxd-module.tar.gz
 
 # OB-Xd release assets (presets extracted from release)
 OB-Xd 2/
