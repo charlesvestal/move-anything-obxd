@@ -24,6 +24,132 @@
                 "min": 0,
                 "max_param": "preset_count",
                 "default": 0
+            },
+            {
+                "key": "cutoff",
+                "name": "Cutoff",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.5,
+                "step": 0.02
+            },
+            {
+                "key": "resonance",
+                "name": "Resonance",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0,
+                "step": 0.02
+            },
+            {
+                "key": "filter_env",
+                "name": "Filter Env",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.5,
+                "step": 0.02
+            },
+            {
+                "key": "attack",
+                "name": "Attack",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0,
+                "step": 0.02
+            },
+            {
+                "key": "decay",
+                "name": "Decay",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.5,
+                "step": 0.02
+            },
+            {
+                "key": "sustain",
+                "name": "Sustain",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.5,
+                "step": 0.02
+            },
+            {
+                "key": "release",
+                "name": "Release",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.3,
+                "step": 0.02
+            },
+            {
+                "key": "osc_mix",
+                "name": "Osc Mix",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.5,
+                "step": 0.02
+            },
+            {
+                "key": "osc2_detune",
+                "name": "Detune",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.5,
+                "step": 0.02
+            },
+            {
+                "key": "lfo_rate",
+                "name": "LFO Rate",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.3,
+                "step": 0.02
+            },
+            {
+                "key": "vibrato",
+                "name": "Vibrato",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0,
+                "step": 0.02
+            },
+            {
+                "key": "portamento",
+                "name": "Portamento",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0,
+                "step": 0.02
+            },
+            {
+                "key": "unison",
+                "name": "Unison",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0,
+                "step": 0.02
+            },
+            {
+                "key": "noise",
+                "name": "Noise",
+                "type": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0,
+                "step": 0.02
             }
         ]
     }

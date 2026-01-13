@@ -23,6 +23,16 @@
                     "dry": 0.85
                 }
             }
+        ],
+        "knob_mappings": [
+            {"cc": 71, "target": "synth", "param": "preset"},
+            {"cc": 72, "target": "synth", "param": "cutoff"},
+            {"cc": 73, "target": "synth", "param": "resonance"},
+            {"cc": 74, "target": "synth", "param": "osc_mix"},
+            {"cc": 75, "target": "synth", "param": "osc2_detune"},
+            {"cc": 76, "target": "midi_fx", "param": "arp_bpm"},
+            {"cc": 77, "target": "fx1", "param": "room_size"},
+            {"cc": 78, "target": "fx1", "param": "wet"}
         ]
     }
 }
