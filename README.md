@@ -13,7 +13,19 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 - Full ADSR envelopes for amplitude and filter
 - Works standalone or as a sound generator in Signal Chain patches
 
+## Prerequisites
+
+- [Move Anything](https://github.com/charlesvestal/move-anything) installed on your Ableton Move
+- SSH access enabled: http://move.local/development/ssh
+
 ## Install
+
+### Via Module Store (Recommended)
+
+1. Launch Move Anything on your Move
+2. Select **Module Store** from the main menu
+3. Navigate to **Sound Generators** → **OB-Xd**
+4. Select **Install**
 
 ### Quick Install (pre-built)
 
@@ -52,12 +64,24 @@ This also installs chain presets for using OB-Xd with arpeggiators and effects.
 
 **Modulation:** LFO Rate, LFO Wave, LFO→Filter, LFO→Pitch, LFO→PW, Vibrato, Unison, Portamento
 
+## Troubleshooting
+
+**No sound:**
+- Check that voices are playing (polyphony count shows in display)
+- Try changing preset - some presets may have low volume
+- Ensure MIDI is routed correctly if using external controller
+
+**Harsh/clipping sound:**
+- Lower the filter resonance - OB-Xd can self-oscillate at high resonance
+- Reduce the cutoff frequency
+- Lower unison detune if enabled
+
+**CPU usage high:**
+- Reduce unison (each unison voice doubles CPU load)
+- Use fewer simultaneous notes
+
 ## License
 
 GPL-3.0 - See [LICENSE](LICENSE)
 
 Based on OB-Xd by Filatov Vadim, which is also GPL licensed.
-
-## Requirements
-
-- [Move Anything](https://github.com/charlesvestal/move-anything) must be installed on your Move
