@@ -70,9 +70,15 @@ if [ -d "src/presets" ]; then
     done
 fi
 
+# Create tarball for release
+cd dist
+tar -czvf obxd-module.tar.gz obxd/
+cd ..
+
 echo ""
 echo "=== Build Complete ==="
 echo "Output: dist/obxd/"
+echo "Tarball: dist/obxd-module.tar.gz"
 echo ""
 echo "To install on Move:"
 echo "  ./scripts/install.sh"
