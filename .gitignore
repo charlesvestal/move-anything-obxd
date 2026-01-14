@@ -13,3 +13,4 @@ OB-Xd 2/
 # IDE
 .vscode/
 .idea/
+*.tar.gz
