@@ -1,13 +1,13 @@
 {
     "id": "obxd",
     "name": "OB-Xd",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Virtual analog synthesizer based on Oberheim OB-X",
     "author": "reales (port by charlesvestal)",
     "license": "GPL-3.0",
     "ui": "ui.js",
     "dsp": "dsp.so",
-    "api_version": 1,
+    "api_version": 2,
     "capabilities": {
         "audio_out": true,
         "audio_in": false,
