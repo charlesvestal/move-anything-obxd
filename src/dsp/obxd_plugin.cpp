@@ -523,6 +523,72 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
         }
     }
 
+    /* UI hierarchy for shadow parameter editor */
+    if (strcmp(key, "ui_hierarchy") == 0) {
+        const char *hierarchy = "{"
+            "\"modes\":null,"
+            "\"levels\":{"
+                "\"root\":{"
+                    "\"list_param\":\"preset\","
+                    "\"count_param\":\"preset_count\","
+                    "\"name_param\":\"preset_name\","
+                    "\"children\":\"filter\","
+                    "\"knobs\":[],"
+                    "\"params\":[]"
+                "},"
+                "\"filter\":{"
+                    "\"children\":\"osc\","
+                    "\"knobs\":[\"cutoff\",\"resonance\",\"filter_env\",\"attack\",\"decay\",\"sustain\",\"release\",\"octave_transpose\"],"
+                    "\"params\":[\"cutoff\",\"resonance\",\"filter_env\",\"attack\",\"decay\",\"sustain\",\"release\",\"octave_transpose\"]"
+                "},"
+                "\"osc\":{"
+                    "\"children\":\"mod\","
+                    "\"knobs\":[\"osc_mix\",\"osc2_detune\",\"noise\"],"
+                    "\"params\":[\"osc_mix\",\"osc2_detune\",\"noise\"]"
+                "},"
+                "\"mod\":{"
+                    "\"children\":null,"
+                    "\"knobs\":[\"lfo_rate\",\"vibrato\",\"portamento\",\"unison\"],"
+                    "\"params\":[\"lfo_rate\",\"vibrato\",\"portamento\",\"unison\"]"
+                "}"
+            "}"
+        "}";
+        int len = strlen(hierarchy);
+        if (len < buf_len) {
+            strcpy(buf, hierarchy);
+            return len;
+        }
+        return -1;
+    }
+
+    /* Chain params metadata for shadow parameter editor */
+    if (strcmp(key, "chain_params") == 0) {
+        const char *params_json = "["
+            "{\"key\":\"preset\",\"name\":\"Preset\",\"type\":\"int\",\"min\":0,\"max\":9999},"
+            "{\"key\":\"octave_transpose\",\"name\":\"Octave\",\"type\":\"int\",\"min\":-3,\"max\":3},"
+            "{\"key\":\"cutoff\",\"name\":\"Cutoff\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"resonance\",\"name\":\"Resonance\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"filter_env\",\"name\":\"Filter Env\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"attack\",\"name\":\"Attack\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"decay\",\"name\":\"Decay\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"sustain\",\"name\":\"Sustain\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"release\",\"name\":\"Release\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"osc_mix\",\"name\":\"Osc Mix\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"osc2_detune\",\"name\":\"Detune\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"noise\",\"name\":\"Noise\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"lfo_rate\",\"name\":\"LFO Rate\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"vibrato\",\"name\":\"Vibrato\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"portamento\",\"name\":\"Portamento\",\"type\":\"float\",\"min\":0,\"max\":1},"
+            "{\"key\":\"unison\",\"name\":\"Unison\",\"type\":\"float\",\"min\":0,\"max\":1}"
+        "]";
+        int len = strlen(params_json);
+        if (len < buf_len) {
+            strcpy(buf, params_json);
+            return len;
+        }
+        return -1;
+    }
+
     return -1;
 }
 
