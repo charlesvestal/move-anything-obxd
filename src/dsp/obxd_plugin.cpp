@@ -84,6 +84,28 @@ static const char* g_param_names[3][8] = {
     {"lfo_rate", "lfo_wave", "lfo_cutoff", "lfo_pitch", "lfo_pw", "vibrato", "unison", "portamento"}
 };
 
+/* Parameter definitions for shadow UI - maps names to indices */
+#include "param_helper.h"
+static const param_def_t g_shadow_params[] = {
+    /* Filter params (bank 0) */
+    {"cutoff",      "Cutoff",      PARAM_TYPE_FLOAT, 0,  0.0f, 1.0f},
+    {"resonance",   "Resonance",   PARAM_TYPE_FLOAT, 1,  0.0f, 1.0f},
+    {"filter_env",  "Filter Env",  PARAM_TYPE_FLOAT, 2,  0.0f, 1.0f},
+    {"attack",      "Attack",      PARAM_TYPE_FLOAT, 4,  0.0f, 1.0f},
+    {"decay",       "Decay",       PARAM_TYPE_FLOAT, 5,  0.0f, 1.0f},
+    {"sustain",     "Sustain",     PARAM_TYPE_FLOAT, 6,  0.0f, 1.0f},
+    {"release",     "Release",     PARAM_TYPE_FLOAT, 7,  0.0f, 1.0f},
+    /* Osc params (bank 1) */
+    {"osc_mix",     "Osc Mix",     PARAM_TYPE_FLOAT, 10, 0.0f, 1.0f},
+    {"osc2_detune", "Detune",      PARAM_TYPE_FLOAT, 13, 0.0f, 1.0f},
+    {"noise",       "Noise",       PARAM_TYPE_FLOAT, 11, 0.0f, 1.0f},
+    /* Mod params (bank 2) */
+    {"lfo_rate",    "LFO Rate",    PARAM_TYPE_FLOAT, 16, 0.0f, 1.0f},
+    {"vibrato",     "Vibrato",     PARAM_TYPE_FLOAT, 21, 0.0f, 1.0f},
+    {"portamento",  "Portamento",  PARAM_TYPE_FLOAT, 23, 0.0f, 1.0f},
+    {"unison",      "Unison",      PARAM_TYPE_FLOAT, 22, 0.0f, 1.0f},
+};
+
 /* =====================================================================
  * Shared utility functions
  * ===================================================================== */
@@ -458,6 +480,14 @@ static void v2_on_midi(void *instance, const uint8_t *msg, int len, int source) 
     }
 }
 
+/* v2 helper: Apply param by flat index (converts to bank/idx internally) */
+static void v2_apply_param_flat(obxd_instance_t *inst, int flat_idx, float value) {
+    if (flat_idx < 0 || flat_idx >= MAX_PARAMS) return;
+    int bank = flat_idx / 8;
+    int idx = flat_idx % 8;
+    v2_apply_param(inst, bank, idx, value);
+}
+
 /* v2 API: Set parameter */
 static void v2_set_param(void *instance, const char *key, const char *val) {
     obxd_instance_t *inst = (obxd_instance_t*)instance;
@@ -485,6 +515,20 @@ static void v2_set_param(void *instance, const char *key, const char *val) {
         if (idx >= 0 && idx < 8) {
             float fval = atof(val);
             v2_apply_param(inst, inst->param_bank, idx, fval);
+        }
+    }
+    else {
+        /* Named parameter access via helper (for shadow UI) */
+        float fval = (float)atof(val);
+        /* Find the param and apply it */
+        for (int i = 0; i < (int)PARAM_DEF_COUNT(g_shadow_params); i++) {
+            if (strcmp(key, g_shadow_params[i].key) == 0) {
+                /* Clamp value */
+                if (fval < g_shadow_params[i].min_val) fval = g_shadow_params[i].min_val;
+                if (fval > g_shadow_params[i].max_val) fval = g_shadow_params[i].max_val;
+                v2_apply_param_flat(inst, g_shadow_params[i].index, fval);
+                return;
+            }
         }
     }
 }
@@ -522,6 +566,11 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
             return snprintf(buf, buf_len, "%.3f", inst->params[param_idx]);
         }
     }
+
+    /* Named parameter access via helper (for shadow UI) */
+    int result = param_helper_get(g_shadow_params, PARAM_DEF_COUNT(g_shadow_params),
+                                  inst->params, key, buf, buf_len);
+    if (result >= 0) return result;
 
     /* UI hierarchy for shadow parameter editor */
     if (strcmp(key, "ui_hierarchy") == 0) {
