@@ -7,7 +7,8 @@
  * GPL-3.0 License
  */
 
-import { createSoundGeneratorUI } from '../../shared/sound_generator_ui.mjs';
+/* Shared utilities - absolute path for module location independence */
+import { createSoundGeneratorUI } from '/data/UserData/move-anything/shared/sound_generator_ui.mjs';
 
 /* Create the UI with OB-Xd-specific customizations */
 const ui = createSoundGeneratorUI({

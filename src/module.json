@@ -2,7 +2,7 @@
   "id": "obxd",
   "name": "OB-Xd",
   "abbrev": "OB",
-  "version": "0.1.3",
+  "version": "0.3.0",
   "description": "Virtual analog synthesizer based on Oberheim OB-X",
   "author": "reales (port by charlesvestal)",
   "license": "GPL-3.0",
