@@ -49,6 +49,7 @@ typedef struct plugin_api_v2 {
     void (*on_midi)(void *instance, const uint8_t *msg, int len, int source);
     void (*set_param)(void *instance, const char *key, const char *val);
     int (*get_param)(void *instance, const char *key, char *buf, int buf_len);
+    int (*get_error)(void *instance, char *buf, int buf_len);
     void (*render_block)(void *instance, int16_t *out_interleaved_lr, int frames);
 } plugin_api_v2_t;
 
@@ -669,6 +670,14 @@ static void v2_render_block(void *instance, int16_t *out_interleaved_lr, int fra
     }
 }
 
+/* OB-Xd doesn't require external assets, so no load errors */
+static int v2_get_error(void *instance, char *buf, int buf_len) {
+    (void)instance;
+    (void)buf;
+    (void)buf_len;
+    return 0;  /* No error */
+}
+
 /* v2 API table */
 static plugin_api_v2_t g_plugin_api_v2;
 
@@ -682,6 +691,7 @@ extern "C" plugin_api_v2_t* move_plugin_init_v2(const host_api_v1_t *host) {
     g_plugin_api_v2.on_midi = v2_on_midi;
     g_plugin_api_v2.set_param = v2_set_param;
     g_plugin_api_v2.get_param = v2_get_param;
+    g_plugin_api_v2.get_error = v2_get_error;
     g_plugin_api_v2.render_block = v2_render_block;
 
     return &g_plugin_api_v2;
