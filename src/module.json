@@ -17,6 +17,15 @@
     "aftertouch": true,
     "chainable": true,
     "component_type": "sound_generator",
+    "ui_hierarchy": {
+      "levels": {
+        "root": {
+          "name": "OB-Xd",
+          "params": ["preset", "cutoff", "resonance", "filter_env", "attack", "decay", "sustain", "release", "osc_mix", "osc2_detune", "lfo_rate", "vibrato", "portamento", "unison", "noise"],
+          "knobs": ["cutoff", "resonance", "filter_env", "attack", "decay", "sustain", "release", "osc_mix"]
+        }
+      }
+    },
     "chain_params": [
       {
         "key": "preset",
