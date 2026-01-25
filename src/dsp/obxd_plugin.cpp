@@ -548,6 +548,9 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
     if (strcmp(key, "preset_name") == 0) {
         return snprintf(buf, buf_len, "%s", inst->preset_name);
     }
+    if (strcmp(key, "name") == 0) {
+        return snprintf(buf, buf_len, "OB-Xd");
+    }
     if (strcmp(key, "octave_transpose") == 0) {
         return snprintf(buf, buf_len, "%d", inst->octave_transpose);
     }
