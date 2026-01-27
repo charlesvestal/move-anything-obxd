@@ -51,18 +51,45 @@ This also installs chain presets for using OB-Xd with arpeggiators and effects.
 
 | Control | Function |
 |---------|----------|
-| Left/Right | Switch parameter bank (Filter/Osc/Mod) |
-| Up/Down | Octave transpose |
-| Jog wheel | Browse presets |
-| Knobs 1-8 | Adjust current bank's parameters |
+| Up/Down | Octave transpose (-2 to +2) |
+| Jog wheel | Browse presets / navigate menus |
+| Knobs 1-8 | Adjust parameters for current category |
 
-### Parameter Banks
+In Shadow UI / Signal Chain, parameters are organized into navigable categories.
 
-**Filter:** Cutoff, Resonance, Env Amount, Key Track, Attack, Decay, Sustain, Release
+## Parameters (67 total)
 
-**Oscillators:** Osc1 Wave, Osc1 PW, Osc2 Wave, Osc2 PW, Detune, Mix, Osc2 Pitch, Noise
+### Global
+`volume`, `tune`, `octave`, `voice_count`, `legato`, `portamento`, `unison`, `unison_det`
 
-**Modulation:** LFO Rate, LFO Wave, LFO→Filter, LFO→Pitch, LFO→PW, Vibrato, Unison, Portamento
+### Oscillator 1
+`osc1_saw`*, `osc1_pulse`*, `osc1_pitch`, `osc1_mix`
+
+### Oscillator 2
+`osc2_saw`*, `osc2_pulse`*, `osc2_pitch`, `osc2_mix`, `osc2_detune`, `osc2_halfstp`*
+
+### Osc Common
+`pw`, `pw_env`, `pw_env_both`*, `pw_ofs`, `noise`, `xmod`, `brightness`
+
+### Filter
+`cutoff`, `resonance`, `filter_env`, `key_follow`, `multimode`, `bandpass`*, `fourpole`*, `self_osc`*, `fenv_inv`*
+
+### Filter Envelope
+`f_attack`, `f_decay`, `f_sustain`, `f_release`, `vel_filter`
+
+### Amp Envelope
+`attack`, `decay`, `sustain`, `release`, `vel_amp`
+
+### LFO
+`lfo_rate`, `lfo_sin`*, `lfo_square`*, `lfo_sh`*, `lfo_sync`*, `lfo_amt1`, `lfo_amt2`
+
+### LFO Destinations
+`lfo_osc1`*, `lfo_osc2`*, `lfo_filter`*, `lfo_pw1`*, `lfo_pw2`*
+
+### Pitch Mod
+`env_pitch`, `env_pitch_both`*, `bend_range`, `bend_osc2`*, `vibrato`
+
+*\* = toggle (on/off)*
 
 ## Troubleshooting
 
