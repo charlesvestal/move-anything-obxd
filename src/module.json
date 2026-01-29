@@ -4,7 +4,7 @@
   "abbrev": "OB",
   "version": "0.3.4",
   "description": "Virtual analog synthesizer based on Oberheim OB-X",
-  "author": "reales (port by charlesvestal)",
+  "author": "reales (port: charlesvestal)",
   "license": "GPL-3.0",
   "ui": "ui.js",
   "dsp": "dsp.so",
