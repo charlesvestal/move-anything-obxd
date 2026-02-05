@@ -31,7 +31,7 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 
 ```bash
 curl -L https://raw.githubusercontent.com/charlesvestal/move-anything-obxd/main/obxd-module.tar.gz | \
-  ssh ableton@move.local 'tar -xz -C /data/UserData/move-anything/modules/'
+  ssh ableton@move.local 'mkdir -p /data/UserData/move-anything/modules/sound_generators && tar -xz -C /data/UserData/move-anything/modules/sound_generators/'
 ```
 
 ### Build from Source
