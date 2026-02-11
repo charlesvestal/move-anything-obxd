@@ -741,7 +741,7 @@ static void v2_set_param(void *instance, const char *key, const char *val) {
 
     if (strcmp(key, "preset") == 0) {
         int idx = atoi(val);
-        if (idx >= 0 && idx < inst->preset_count) {
+        if (idx >= 0 && idx < inst->preset_count && idx != inst->current_preset) {
             inst->current_preset = idx;
             v2_apply_preset(inst, idx);
         }
