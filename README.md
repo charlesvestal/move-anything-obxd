@@ -1,4 +1,4 @@
-# OB-Xd for Move Anything
+# OB-Xd for Move Everything
 
 Virtual analog synthesizer module based on [OB-Xd](https://github.com/reales/OB-Xd) by Filatov Vadim (reales).
 
@@ -15,14 +15,14 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 
 ## Prerequisites
 
-- [Move Anything](https://github.com/charlesvestal/move-anything) installed on your Ableton Move
+- [Move Everything](https://github.com/charlesvestal/move-anything) installed on your Ableton Move
 - SSH access enabled: http://move.local/development/ssh
 
 ## Install
 
 ### Via Module Store (Recommended)
 
-1. Launch Move Anything on your Move
+1. Launch Move Everything on your Move
 2. Select **Module Store** from the main menu
 3. Navigate to **Sound Generators** → **OB-Xd**
 4. Select **Install**
@@ -112,3 +112,10 @@ In Shadow UI / Signal Chain, parameters are organized into navigable categories.
 GPL-3.0 - See [LICENSE](LICENSE)
 
 Based on OB-Xd by Filatov Vadim, which is also GPL licensed.
+
+## AI Assistance Disclaimer
+
+This module is part of Move Everything and was developed with AI assistance, including Claude, Codex, and other AI assistants.
+
+All architecture, implementation, and release decisions are reviewed by human maintainers.  
+AI-assisted content may still contain errors, so please validate functionality, security, and license compatibility before production use.
