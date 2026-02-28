@@ -1,0 +1,181 @@
+{
+  "title": "OB-Xd",
+  "children": [
+    {
+      "title": "Overview",
+      "lines": [
+        "Oberheim OB-X",
+        "emulation.",
+        "6-voice polyphonic.",
+        "",
+        "2 oscillators with",
+        "saw, pulse, and",
+        "cross-modulation.",
+        "Multimode filter",
+        "(LP/HP/BP, 2/4 pole)",
+        "with self-oscillation.",
+        "Dual ADSR envelopes.",
+        "LFO with routing.",
+        "",
+        "128 factory presets.",
+        "Unison and legato."
+      ]
+    },
+    {
+      "title": "Controls",
+      "children": [
+        {
+          "title": "Knob Mapping",
+          "lines": [
+            "Knob 1: Cutoff",
+            "Knob 2: Resonance",
+            "Knob 3: Filter Env",
+            "Knob 4: Attack",
+            "Knob 5: Decay",
+            "Knob 6: Sustain",
+            "Knob 7: Release",
+            "Knob 8: Octave"
+          ]
+        },
+        {
+          "title": "Oscillator 1",
+          "lines": [
+            "Saw: enable sawtooth",
+            "Pulse: enable pulse",
+            " (mutually exclusive",
+            " with saw)",
+            "",
+            "Pitch: pitch mod",
+            " amount",
+            "",
+            "Mix: output level"
+          ]
+        },
+        {
+          "title": "Oscillator 2",
+          "lines": [
+            "Saw: enable sawtooth",
+            "Pulse: enable pulse",
+            "",
+            "Pitch: pitch offset",
+            "Mix: output level",
+            "Detune: relative to",
+            " Osc 1",
+            "",
+            "Hard Sync: reset",
+            " Osc 2 phase to",
+            " Osc 1 for metallic",
+            " tones"
+          ]
+        },
+        {
+          "title": "Osc Common",
+          "lines": [
+            "PW: pulse width",
+            " (0.5 = square)",
+            "PW Env: envelope to",
+            " pulse width",
+            "",
+            "Noise: white noise",
+            " mix level",
+            "",
+            "X-Mod: cross-mod",
+            " (Osc2 modulates",
+            " Osc1 pitch)",
+            "",
+            "Brightness: high",
+            " frequency boost"
+          ]
+        },
+        {
+          "title": "Filter",
+          "lines": [
+            "Cutoff: frequency",
+            "Resonance: feedback",
+            "Filter Env: envelope",
+            " modulation depth",
+            "Key Follow: keyboard",
+            " tracking",
+            "",
+            "Multimode: blend",
+            " from LP to HP",
+            "Bandpass: BP mode",
+            "4-Pole: steeper",
+            " rolloff (vs 2-pole)",
+            "Self Osc: filter",
+            " rings at cutoff",
+            "Env Invert: flip",
+            " envelope direction"
+          ]
+        },
+        {
+          "title": "LFO",
+          "lines": [
+            "Rate: LFO speed",
+            "",
+            "Waveforms (toggle):",
+            " Sine, Square, S&H",
+            "",
+            "Sync: restart on",
+            " each note",
+            "",
+            "Amount 1 & 2:",
+            " Modulation depth",
+            "",
+            "Destinations:",
+            " Osc 1 pitch",
+            " Osc 2 pitch",
+            " Filter cutoff",
+            " Osc 1 pulse width",
+            " Osc 2 pulse width"
+          ]
+        },
+        {
+          "title": "Voice Modes",
+          "lines": [
+            "Voice Count: 1-8",
+            "",
+            "Legato: 4 modes",
+            " 0: Standard",
+            " 1: Mono legato",
+            " 2: Chord",
+            " 3: One-shot",
+            "",
+            "Unison: stack all",
+            " voices on one note",
+            "Unison Detune:",
+            " spread between",
+            " unison voices",
+            "",
+            "Portamento: glide",
+            " time between notes"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "MIDI",
+      "lines": [
+        "6-voice polyphony",
+        "with voice stealing.",
+        "",
+        "Pitch Bend:",
+        " +/- 2 semitones",
+        " (or +/- 12)",
+        "",
+        "Mod Wheel (CC 1):",
+        " LFO modulation",
+        "",
+        "Aftertouch:",
+        " Supported",
+        "",
+        "Sustain (CC 64):",
+        " Hold notes",
+        "",
+        "Velocity controls",
+        "amplitude and filter",
+        "envelope depth."
+      ]
+    }
+  ]
+}

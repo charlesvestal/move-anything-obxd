@@ -58,6 +58,7 @@ ${CROSS_PREFIX}g++ -g -O3 -shared -fPIC -std=c++14 \
 # Copy files to dist (use cat to avoid ExtFS deallocation issues with Docker)
 echo "Packaging..."
 cat src/module.json > dist/obxd/module.json
+[ -f src/help.json ] && cat src/help.json > dist/obxd/help.json
 cat src/ui.js > dist/obxd/ui.js
 cat build/dsp.so > dist/obxd/dsp.so
 chmod +x dist/obxd/dsp.so
