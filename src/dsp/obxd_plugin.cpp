@@ -64,6 +64,7 @@ typedef plugin_api_v2_t* (*move_plugin_init_v2_fn)(const host_api_v1_t *host);
 #define MAX_VOICES 6  /* Balanced for ARM CPU */
 #define MAX_PRESETS 128
 #define MAX_PARAMS 100
+#define MAX_BANKS 32  /* Maximum number of .fxb bank files */
 
 /* Host API reference */
 static const host_api_v1_t *g_host = NULL;
@@ -73,6 +74,13 @@ struct Preset {
     char name[32];
     float params[MAX_PARAMS];
     int param_count;
+};
+
+/* Bank metadata */
+struct BankInfo {
+    char name[64];       /* Display name (filename without .fxb) */
+    char path[512];      /* Full path to .fxb file */
+    int preset_count;    /* Number of presets in this bank */
 };
 
 /* Parameter names for UI display */
@@ -230,6 +238,10 @@ typedef struct {
     float params[PARAM_COUNT];  /* Engine param storage - indexed by ParamsEnum */
     Preset presets[MAX_PRESETS];
     float output_gain;
+    /* Multi-bank support */
+    BankInfo banks[MAX_BANKS];
+    int bank_count;
+    int current_bank;
 } obxd_instance_t;
 
 /* Forward declarations */
@@ -237,6 +249,8 @@ static void v2_init_default_patch(obxd_instance_t *inst);
 static void v2_apply_preset(obxd_instance_t *inst, int preset_idx);
 static void v2_apply_param(obxd_instance_t *inst, int bank, int idx, float value);
 static int v2_load_bank(obxd_instance_t *inst, const char *bank_path);
+static void v2_scan_banks(obxd_instance_t *inst, const char *module_dir);
+static int v2_switch_bank(obxd_instance_t *inst, int bank_idx);
 
 /* v2 helper: Initialize default patch */
 static void v2_init_default_patch(obxd_instance_t *inst) {
@@ -505,6 +519,131 @@ static int v2_load_bank(obxd_instance_t *inst, const char *bank_path) {
     return inst->preset_count;
 }
 
+/* v2 helper: Extract display name from a file path (strip directory and .fxb extension) */
+static void bank_name_from_path(const char *path, char *out, int out_len) {
+    const char *base = strrchr(path, '/');
+    base = base ? base + 1 : path;
+
+    strncpy(out, base, out_len - 1);
+    out[out_len - 1] = '\0';
+
+    /* Strip .fxb extension (case-insensitive) */
+    int len = strlen(out);
+    if (len > 4 &&
+        (out[len-4] == '.') &&
+        (out[len-3] == 'f' || out[len-3] == 'F') &&
+        (out[len-2] == 'x' || out[len-2] == 'X') &&
+        (out[len-1] == 'b' || out[len-1] == 'B')) {
+        out[len-4] = '\0';
+    }
+}
+
+/* Comparator for sorting banks alphabetically (Factory always first) */
+static int bank_compare(const void *a, const void *b) {
+    const BankInfo *ba = (const BankInfo *)a;
+    const BankInfo *bb = (const BankInfo *)b;
+    /* Factory always sorts first */
+    if (strcmp(ba->name, "Factory") == 0) return -1;
+    if (strcmp(bb->name, "Factory") == 0) return 1;
+    return strcasecmp(ba->name, bb->name);
+}
+
+/* v2 helper: Scan presets/ folder and populate banks[] array */
+static void v2_scan_banks(obxd_instance_t *inst, const char *module_dir) {
+    /* Remember current bank name so we can re-select it after rescan */
+    char prev_bank_name[64] = "";
+    if (inst->current_bank >= 0 && inst->current_bank < inst->bank_count) {
+        strncpy(prev_bank_name, inst->banks[inst->current_bank].name, sizeof(prev_bank_name) - 1);
+    }
+
+    inst->bank_count = 0;
+
+    char presets_dir[512];
+    snprintf(presets_dir, sizeof(presets_dir), "%s/presets", module_dir);
+
+    /* Always add factory.fxb first (Bank 0) if it exists */
+    char factory_path[512];
+    snprintf(factory_path, sizeof(factory_path), "%s/factory.fxb", presets_dir);
+
+    FILE *f = fopen(factory_path, "rb");
+    if (f) {
+        fclose(f);
+        BankInfo *b = &inst->banks[inst->bank_count];
+        strncpy(b->name, "Factory", sizeof(b->name) - 1);
+        strncpy(b->path, factory_path, sizeof(b->path) - 1);
+        b->preset_count = 0;
+        inst->bank_count++;
+    }
+
+    /* Scan for additional .fxb files */
+    DIR *dir = opendir(presets_dir);
+    if (!dir) {
+        plugin_log("Could not open presets dir");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL && inst->bank_count < MAX_BANKS) {
+        const char *fname = entry->d_name;
+        int len = strlen(fname);
+
+        if (len < 5) continue;
+        if (fname[len-4] != '.' ||
+            (fname[len-3] != 'f' && fname[len-3] != 'F') ||
+            (fname[len-2] != 'x' && fname[len-2] != 'X') ||
+            (fname[len-1] != 'b' && fname[len-1] != 'B')) continue;
+
+        /* Skip factory.fxb — already added */
+        if (strcasecmp(fname, "factory.fxb") == 0) continue;
+
+        BankInfo *b = &inst->banks[inst->bank_count];
+        snprintf(b->path, sizeof(b->path), "%s/%s", presets_dir, fname);
+        bank_name_from_path(b->path, b->name, sizeof(b->name));
+        b->preset_count = 0;
+
+        inst->bank_count++;
+    }
+    closedir(dir);
+
+    /* Sort alphabetically (Factory always first) */
+    if (inst->bank_count > 1) {
+        qsort(inst->banks, inst->bank_count, sizeof(BankInfo), bank_compare);
+    }
+
+    /* Re-map current_bank to match the previous bank name after sort */
+    if (prev_bank_name[0]) {
+        for (int i = 0; i < inst->bank_count; i++) {
+            if (strcmp(inst->banks[i].name, prev_bank_name) == 0) {
+                inst->current_bank = i;
+                break;
+            }
+        }
+    }
+
+    char msg[64];
+    snprintf(msg, sizeof(msg), "Total banks found: %d", inst->bank_count);
+    plugin_log(msg);
+}
+
+/* v2 helper: Switch to a bank by index, load its presets */
+static int v2_switch_bank(obxd_instance_t *inst, int bank_idx) {
+    if (bank_idx < 0 || bank_idx >= inst->bank_count) return -1;
+    if (bank_idx == inst->current_bank && inst->preset_count > 0) return inst->preset_count;
+
+    int count = v2_load_bank(inst, inst->banks[bank_idx].path);
+    if (count > 0) {
+        inst->current_bank = bank_idx;
+        inst->banks[bank_idx].preset_count = count;
+        inst->current_preset = 0;
+        v2_apply_preset(inst, 0);
+        char msg[128];
+        snprintf(msg, sizeof(msg), "Switched to bank %d: %s (%d presets)",
+                 bank_idx, inst->banks[bank_idx].name, count);
+        plugin_log(msg);
+    }
+    return count;
+}
+
 /* v2 API: Create instance */
 static void* v2_create_instance(const char *module_dir, const char *json_defaults) {
     (void)json_defaults;
@@ -528,11 +667,11 @@ static void* v2_create_instance(const char *module_dir, const char *json_default
 
     v2_init_default_patch(inst);
 
-    char bank_path[512];
-    snprintf(bank_path, sizeof(bank_path), "%s/presets/factory.fxb", module_dir);
-    if (v2_load_bank(inst, bank_path) > 0) {
-        inst->current_preset = 0;
-        v2_apply_preset(inst, 0);
+    /* Scan presets folder for all .fxb banks and load the first */
+    v2_scan_banks(inst, module_dir);
+    if (inst->bank_count > 0) {
+        inst->current_bank = -1;  /* Force load */
+        v2_switch_bank(inst, 0);
     }
 
     plugin_log("OB-Xd v2: Instance created");
@@ -692,6 +831,22 @@ static void v2_apply_param_direct(obxd_instance_t *inst, int param_idx, float va
 }
 
 /* v2 API: Set parameter */
+/* Helper to extract a JSON string value by key */
+static int json_get_string(const char *json, const char *key, char *out, int out_len) {
+    char search[64];
+    snprintf(search, sizeof(search), "\"%s\":\"", key);
+    const char *pos = strstr(json, search);
+    if (!pos) return -1;
+    pos += strlen(search);
+    const char *end = strchr(pos, '"');
+    if (!end) return -1;
+    int len = end - pos;
+    if (len >= out_len) len = out_len - 1;
+    strncpy(out, pos, len);
+    out[len] = '\0';
+    return 0;
+}
+
 /* Helper to extract a JSON number value by key */
 static int json_get_number(const char *json, const char *key, float *out) {
     char search[64];
@@ -712,7 +867,23 @@ static void v2_set_param(void *instance, const char *key, const char *val) {
     if (strcmp(key, "state") == 0) {
         float fval;
 
-        /* Restore preset first */
+        /* Restore bank by name (robust against .fxb files being added/removed) */
+        char saved_bank[64] = "";
+        if (json_get_string(val, "bank_name", saved_bank, sizeof(saved_bank)) == 0 && saved_bank[0]) {
+            for (int i = 0; i < inst->bank_count; i++) {
+                if (strcmp(inst->banks[i].name, saved_bank) == 0) {
+                    v2_switch_bank(inst, i);
+                    break;
+                }
+            }
+        } else if (json_get_number(val, "bank_index", &fval) == 0) {
+            /* Fallback for old state that only saved bank_index */
+            int idx = (int)fval;
+            if (idx >= 0 && idx < inst->bank_count) {
+                v2_switch_bank(inst, idx);
+            }
+        }
+
         if (json_get_number(val, "preset", &fval) == 0) {
             int idx = (int)fval;
             if (idx >= 0 && idx < inst->preset_count) {
@@ -745,6 +916,10 @@ static void v2_set_param(void *instance, const char *key, const char *val) {
             inst->current_preset = idx;
             v2_apply_preset(inst, idx);
         }
+    }
+    else if (strcmp(key, "bank_index") == 0) {
+        int idx = atoi(val);
+        v2_switch_bank(inst, idx);
     }
     else if (strcmp(key, "octave_transpose") == 0) {
         inst->octave_transpose = atoi(val);
@@ -793,6 +968,33 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
     if (strcmp(key, "preset_name") == 0) {
         return snprintf(buf, buf_len, "%s", inst->preset_name);
     }
+    if (strcmp(key, "bank_index") == 0) {
+        return snprintf(buf, buf_len, "%d", inst->current_bank);
+    }
+    if (strcmp(key, "bank_count") == 0) {
+        return snprintf(buf, buf_len, "%d", inst->bank_count);
+    }
+    if (strcmp(key, "bank_name") == 0) {
+        if (inst->current_bank >= 0 && inst->current_bank < inst->bank_count)
+            return snprintf(buf, buf_len, "%s", inst->banks[inst->current_bank].name);
+        return snprintf(buf, buf_len, "OB-Xd");
+    }
+    if (strcmp(key, "patch_in_bank") == 0) {
+        return snprintf(buf, buf_len, "%d", inst->current_preset + 1);
+    }
+    /* fxb_bank_list — JSON array for hierarchy items_param; rescan on each query */
+    if (strcmp(key, "fxb_bank_list") == 0) {
+        v2_scan_banks(inst, inst->module_dir);
+        int pos = 0;
+        pos += snprintf(buf + pos, buf_len - pos, "[");
+        for (int i = 0; i < inst->bank_count && pos < buf_len - 2; i++) {
+            if (i > 0) pos += snprintf(buf + pos, buf_len - pos, ",");
+            pos += snprintf(buf + pos, buf_len - pos,
+                "{\"label\":\"%s\",\"index\":%d}", inst->banks[i].name, i);
+        }
+        pos += snprintf(buf + pos, buf_len - pos, "]");
+        return pos;
+    }
     if (strcmp(key, "name") == 0) {
         return snprintf(buf, buf_len, "OB-Xd");
     }
@@ -833,6 +1035,7 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
                     "\"children\":null,"
                     "\"knobs\":[\"cutoff\",\"resonance\",\"filter_env\",\"attack\",\"decay\",\"sustain\",\"release\",\"octave_transpose\"],"
                     "\"params\":["
+                        "{\"level\":\"banks\",\"label\":\"Banks\"},"
                         "{\"level\":\"global\",\"label\":\"Global\"},"
                         "{\"level\":\"osc1\",\"label\":\"Oscillator 1\"},"
                         "{\"level\":\"osc2\",\"label\":\"Oscillator 2\"},"
@@ -894,6 +1097,13 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
                     "\"children\":null,"
                     "\"knobs\":[\"env_pitch\",\"bend_range\",\"vibrato\"],"
                     "\"params\":[\"env_pitch\",\"env_pitch_both\",\"bend_range\",\"vibrato\"]"
+                "},"
+                "\"banks\":{"
+                    "\"name\":\"Banks\","
+                    "\"label\":\"Select Bank\","
+                    "\"items_param\":\"fxb_bank_list\","
+                    "\"select_param\":\"bank_index\","
+                    "\"navigate_to\":\"root\""
                 "}"
             "}"
         "}";
@@ -908,9 +1118,11 @@ static int v2_get_param(void *instance, const char *key, char *buf, int buf_len)
     /* State serialization for patch save/load */
     if (strcmp(key, "state") == 0) {
         int offset = 0;
+        const char *bname = (inst->current_bank >= 0 && inst->current_bank < inst->bank_count)
+            ? inst->banks[inst->current_bank].name : "";
         offset += snprintf(buf + offset, buf_len - offset,
-            "{\"preset\":%d,\"octave_transpose\":%d",
-            inst->current_preset, inst->octave_transpose);
+            "{\"preset\":%d,\"octave_transpose\":%d,\"bank_index\":%d,\"bank_name\":\"%s\"",
+            inst->current_preset, inst->octave_transpose, inst->current_bank, bname);
 
         /* Add all shadow params */
         for (int i = 0; i < (int)PARAM_DEF_COUNT(g_shadow_params); i++) {

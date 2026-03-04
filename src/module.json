@@ -2,7 +2,7 @@
   "id": "obxd",
   "name": "OB-Xd",
   "abbrev": "OB",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Virtual analog synthesizer based on Oberheim OB-X",
   "author": "reales (port: charlesvestal)",
   "license": "GPL-3.0",
@@ -22,6 +22,7 @@
         "root": {
           "name": "OB-Xd",
           "params": [
+            { "level": "banks", "label": "Banks" },
             {
               "key": "preset",
               "label": "Preset",
@@ -181,8 +182,27 @@
             "release",
             "osc_mix"
           ]
+        },
+        "banks": {
+          "name": "Banks",
+          "label": "Select Bank",
+          "items_param": "fxb_bank_list",
+          "select_param": "bank_index",
+          "navigate_to": "root"
         }
       }
     }
+  },
+  "assets": {
+    "path": "presets",
+    "label": "Preset Banks",
+    "extensions": [
+      ".fxb"
+    ],
+    "optional": true,
+    "description": "Optionally upload additional .fxb OB-Xd preset banks. Factory presets are included.",
+    "hint": "Find OB-Xd .fxb banks at",
+    "hint_url": "https://github.com/reales/OB-Xd",
+    "hint_url_label": "OB-Xd GitHub"
   }
 }
