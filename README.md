@@ -15,7 +15,7 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 
 ## Prerequisites
 
-- [Move Everything](https://github.com/charlesvestal/move-anything) installed on your Ableton Move
+- [Move Everything](https://github.com/charlesvestal/move-everything) installed on your Ableton Move
 - SSH access enabled: http://move.local/development/ssh
 
 ## Install
@@ -30,7 +30,7 @@ Emulates the classic Oberheim OB-X with polyphonic voices, analog-modeled filter
 ### Quick Install (pre-built)
 
 ```bash
-curl -L https://raw.githubusercontent.com/charlesvestal/move-anything-obxd/main/obxd-module.tar.gz | \
+curl -L https://raw.githubusercontent.com/charlesvestal/move-everything-obxd/main/obxd-module.tar.gz | \
   ssh ableton@move.local 'mkdir -p /data/UserData/move-anything/modules/sound_generators && tar -xz -C /data/UserData/move-anything/modules/sound_generators/'
 ```
 
@@ -39,7 +39,7 @@ curl -L https://raw.githubusercontent.com/charlesvestal/move-anything-obxd/main/
 Requires Docker (recommended) or ARM64 cross-compiler.
 
 ```bash
-git clone https://github.com/charlesvestal/move-anything-obxd
+git clone https://github.com/charlesvestal/move-everything-obxd
 cd move-anything-obxd
 ./scripts/build.sh
 ./scripts/install.sh
